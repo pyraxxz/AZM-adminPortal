@@ -60,10 +60,10 @@ export const trades = {
     request('/api/admin/disputes/force-release', { method: 'POST', body: JSON.stringify({ tradeId, reason }) }),
   forceCancel: (tradeId, reason) =>
     request('/api/admin/disputes/force-cancel', { method: 'POST', body: JSON.stringify({ tradeId, reason }) }),
-  resolve: (tradeId, ruling, reason, buyerPercent) =>
+  resolve: (tradeId, ruling, reason, buyerPercent, override) =>
     request(`/api/admin/disputes/${tradeId}/resolve`, {
       method: 'POST',
-      body: JSON.stringify({ ruling, reason, buyerPercent }),
+      body: JSON.stringify({ ruling, reason, buyerPercent, ...(override ? { override: true } : {}) }),
     }),
   resolutions: () => request('/api/admin/disputes/resolutions'),
   injectMessage: (tradeId, message) =>

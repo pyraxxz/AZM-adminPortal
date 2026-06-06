@@ -4,70 +4,99 @@ import {
   LayoutDashboard, Swords, Users, TrendingUp, Wallet,
   Sliders, FileText, Shield, ChevronLeft, ChevronRight,
   Bell, Settings, LogOut, Database, Zap, Bot,
-  PiggyBank, Siren, Home
+  PiggyBank, Siren, Home, Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useStats } from '@/lib/useAdminData';
 
 const NAV = [
   { label: 'Command Center', icon: LayoutDashboard, to: '/' },
-  { label: 'War Room', icon: Swords, to: '/war-room', badge: 'disputes' },
-  { label: 'Susu Groups', icon: PiggyBank, to: '/susu' },
-  { label: 'Susu Incidents', icon: Siren, to: '/susu-incidents' },
-  { label: 'Residency Queue', icon: Home, to: '/residency-queue' },
-  { label: 'Revenue', icon: TrendingUp, to: '/profits' },
-  { label: 'Pool Monitor', icon: Database, to: '/pools' },
-  { label: 'Users & KYC', icon: Users, to: '/users', badge: 'kyc' },
-  { label: 'Withdrawals', icon: Wallet, to: '/withdrawals', badge: 'withdrawals' },
-  { label: 'Fee Engine', icon: Sliders, to: '/fee-engine' },
-  { label: 'Fee Profiles', icon: Zap, to: '/fee-profiles' },
-  { label: 'AI Operations', icon: Bot, to: '/ai-ops' },
-  { label: 'Audit Log', icon: FileText, to: '/audit-log' },
-  { label: 'System Config', icon: Settings, to: '/config' },
+  { label: 'War Room',        icon: Swords,          to: '/war-room',       badge: 'disputes' },
+  { label: 'Susu Groups',     icon: PiggyBank,       to: '/susu' },
+  { label: 'Susu Incidents',  icon: Siren,           to: '/susu-incidents' },
+  { label: 'Residency Queue', icon: Home,            to: '/residency-queue' },
+  { label: 'Revenue',         icon: TrendingUp,      to: '/profits' },
+  { label: 'Pool Monitor',    icon: Database,        to: '/pools' },
+  { label: 'Users & KYC',     icon: Users,           to: '/users',          badge: 'kyc' },
+  { label: 'Withdrawals',     icon: Wallet,          to: '/withdrawals',    badge: 'withdrawals' },
+  { label: 'Fee Engine',      icon: Sliders,         to: '/fee-engine' },
+  { label: 'Fee Profiles',    icon: Zap,             to: '/fee-profiles' },
+  { label: 'AI Operations',   icon: Bot,             to: '/ai-ops' },
+  { label: 'Audit Log',       icon: FileText,        to: '/audit-log' },
+  { label: 'System Config',   icon: Settings,        to: '/config' },
 ];
+
+/** Format a timestamp as "Xm ago" / "Xh ago" relative label */
+function relativeTime(ts) {
+  if (!ts) return null;
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
+  // Phase ADMIN-CONTROL-2: live GHS/USD rate from stats
+  const { data: stats = {} } = useStats();
+  const liveRate      = stats.ghsRate ?? stats.liveUsdToGhs ?? null;
+  const lastRateSync  = stats.lastRateSync ?? stats.rateUpdatedAt ?? null;
+  const rateDisplay   = liveRate !== null ? Number(liveRate).toFixed(2) : '…';
+  const rateAge       = relativeTime(lastRateSync);
+
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--az-black)', color: 'var(--az-text-primary)' }}>
+
+      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside className={cn(
-        'flex flex-col border-r border-slate-800 transition-all duration-300',
+        'flex flex-col border-r transition-all duration-300 flex-shrink-0',
+        'border-[#1e1e2e]',
         collapsed ? 'w-16' : 'w-60'
-      )}>
+      )} style={{ background: 'var(--az-surface)' }}>
+
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-slate-800">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-            <Shield className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-3 px-4 h-16 border-b border-[#1e1e2e]">
+          <div className="w-8 h-8 rounded-xl bg-[#00d97e22] border border-[#00d97e40] flex items-center justify-center flex-shrink-0 az-glow-emerald">
+            <Shield className="w-4 h-4 text-[#00d97e]" />
           </div>
           {!collapsed && (
             <div>
-              <p className="text-sm font-bold text-white leading-none">Admin Portal</p>
-              <p className="text-xs text-emerald-400 mt-0.5">Control Center</p>
+              <p className="text-sm font-bold text-[#e8e8f0] leading-none tracking-tight">AZAMAN</p>
+              <p className="text-xs text-[#00d97e] mt-0.5 font-medium">Control Center</p>
             </div>
           )}
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-3 overflow-y-auto space-y-0.5">
           {NAV.map(({ label, icon: Icon, to }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
             return (
               <Link
                 key={to}
                 to={to}
+                title={collapsed ? label : undefined}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-colors relative group',
+                  'flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl transition-all duration-150 relative group text-sm',
                   active
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    ? 'bg-[#00d97e15] text-[#00d97e] font-semibold'
+                    : 'text-[#4a4a6a] hover:bg-[#13131e] hover:text-[#7b7b9a]'
                 )}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{label}</span>}
+                <Icon className={cn('w-4 h-4 flex-shrink-0', active && 'text-[#00d97e]')} />
+                {!collapsed && <span>{label}</span>}
+                {/* Left accent bar */}
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#00d97e] rounded-r-full" />
+                )}
+                {/* Tooltip when collapsed */}
                 {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50">
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#13131e] border border-[#2a2a3e] rounded-lg text-xs whitespace-nowrap text-[#e8e8f0] opacity-0 group-hover:opacity-100 pointer-events-none z-50 shadow-xl">
                     {label}
                   </div>
                 )}
@@ -77,51 +106,82 @@ export default function AdminLayout() {
         </nav>
 
         {/* Collapse toggle */}
-        <div className="border-t border-slate-800 p-3">
+        <div className="border-t border-[#1e1e2e] p-3">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-slate-800 text-slate-400 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl hover:bg-[#13131e] text-[#4a4a6a] hover:text-[#7b7b9a] transition-colors"
           >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {!collapsed && <span className="text-xs">Collapse</span>}
+            {collapsed
+              ? <ChevronRight className="w-4 h-4" />
+              : <><ChevronLeft className="w-4 h-4" /><span className="text-xs">Collapse</span></>
+            }
           </button>
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main area ───────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
+
         {/* Topbar */}
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-slate-400">System Online</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
-              <span className="text-xs text-slate-400">GHS/USD</span>
-              <span className="text-xs font-bold text-emerald-400">12.50</span>
+        <header
+          className="h-16 border-b border-[#1e1e2e] flex items-center justify-between px-6 flex-shrink-0"
+          style={{ background: 'var(--az-surface)' }}
+        >
+          {/* Left: system status */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-2 h-2 rounded-full bg-[#00d97e]" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-[#00d97e] az-pulse" />
             </div>
-            <button className="relative p-2 rounded-lg hover:bg-slate-800 transition-colors">
-              <Bell className="w-4 h-4 text-slate-400" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            <span className="text-xs text-[#4a4a6a] font-medium">System Online</span>
+          </div>
+
+          {/* Right: rate + notifications + user */}
+          <div className="flex items-center gap-2">
+
+            {/* Live GHS/USD rate — Phase ADMIN-CONTROL-2 FIX B */}
+            <div
+              className="flex items-center gap-2.5 bg-[#13131e] border border-[#1e1e2e] rounded-xl px-3 py-1.5 group relative cursor-default"
+              title={lastRateSync ? `Last synced: ${new Date(lastRateSync).toLocaleTimeString()}` : 'Rate from oracle'}
+            >
+              <Activity className="w-3 h-3 text-[#4a4a6a]" />
+              <span className="text-xs text-[#4a4a6a] az-mono">GHS/USD</span>
+              <span className="text-sm font-bold text-[#00d97e] az-mono">{rateDisplay}</span>
+              {/* Last-sync tooltip */}
+              {rateAge && (
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-[#13131e] border border-[#2a2a3e] rounded-lg text-xs whitespace-nowrap text-[#7b7b9a] opacity-0 group-hover:opacity-100 pointer-events-none z-50 shadow-xl">
+                  Updated {rateAge}
+                </div>
+              )}
+            </div>
+
+            {/* Bell */}
+            <button className="relative p-2 rounded-xl hover:bg-[#13131e] transition-colors">
+              <Bell className="w-4 h-4 text-[#4a4a6a]" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#f43f5e] rounded-full" />
             </button>
-            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors">
-              <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <span className="text-xs text-emerald-400 font-bold">A</span>
+
+            {/* User pill */}
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[#13131e] transition-colors border border-transparent hover:border-[#1e1e2e]">
+              <div className="w-6 h-6 rounded-lg bg-[#00d97e22] border border-[#00d97e40] flex items-center justify-center">
+                <span className="text-xs text-[#00d97e] font-bold">A</span>
               </div>
-              {!collapsed && <span className="text-sm text-slate-300">Admin</span>}
+              {!collapsed && <span className="text-sm text-[#7b7b9a] font-medium">Admin</span>}
             </button>
+
+            {/* Logout */}
             <button
               onClick={() => { localStorage.removeItem('admin_token'); window.location.href = '/login'; }}
-              className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl hover:bg-[#13131e] transition-colors"
+              title="Sign out"
             >
-              <LogOut className="w-4 h-4 text-slate-400" />
+              <LogOut className="w-4 h-4 text-[#4a4a6a] hover:text-[#f43f5e] transition-colors" />
             </button>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-slate-950 p-6">
+        <main className="flex-1 overflow-y-auto p-6" style={{ background: 'var(--az-black)' }}>
           <Outlet />
         </main>
       </div>
