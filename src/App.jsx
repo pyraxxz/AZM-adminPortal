@@ -18,6 +18,7 @@ import AiOps from '@/pages/AiOps';
 import SusuGroups from '@/pages/SusuGroups';
 import SusuIncidents from '@/pages/SusuIncidents';
 import ResidencyQueue from '@/pages/ResidencyQueue';
+import Notifications from '@/pages/Notifications';
 import Login from '@/pages/Login';
 
 const AuthenticatedApp = () => {
@@ -55,6 +56,7 @@ const AuthenticatedApp = () => {
         <Route path="/susu" element={<SusuGroups />} />
         <Route path="/susu-incidents" element={<SusuIncidents />} />
         <Route path="/residency-queue" element={<ResidencyQueue />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/users" element={<Users />} />
         <Route path="/withdrawals" element={<Withdrawals />} />
         <Route path="/audit-log" element={<AuditLog />} />

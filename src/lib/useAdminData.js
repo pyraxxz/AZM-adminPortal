@@ -121,6 +121,62 @@ export function useWithdrawals() {
   });
 }
 
+// Payouts flagged NEEDS_MANUAL_REVIEW (the autonomous payout worker couldn't
+// auto-dispatch them). Used by the notification center.
+export function useNeedsReviewWithdrawals() {
+  return useQuery({
+    queryKey: ['admin', 'withdrawals', 'needs-review'],
+    queryFn: async () => {
+      const data = await api.withdrawals.needsReview();
+      // Shape tolerance: backend may return {data:{...}}, {withdrawals}, {needsReview}, or an array.
+      return (
+        data?.data?.needsReview ||
+        data?.needsReview ||
+        data?.withdrawals ||
+        data?.data ||
+        (Array.isArray(data) ? data : [])
+      );
+    },
+    refetchInterval: 30000,
+  });
+}
+
+// Pending vendor applications (mirrors the Users.jsx VendorPanel query).
+export function useVendorApplications() {
+  return useQuery({
+    queryKey: ['vendor', 'apps'],
+    queryFn: async () => {
+      const data = await api.vendors.applications('PENDING');
+      return data?.applications || data?.data || (Array.isArray(data) ? data : []);
+    },
+    refetchInterval: 60000,
+  });
+}
+
+// Resolved dispute history (for the "Resolved" feed in the notification center).
+export function useDisputeResolutions() {
+  return useQuery({
+    queryKey: ['admin', 'dispute-resolutions'],
+    queryFn: async () => {
+      const data = await api.trades.resolutions();
+      return data?.resolutions || data?.data?.resolutions || (Array.isArray(data) ? data : []);
+    },
+    refetchInterval: 60000,
+  });
+}
+
+// Pending KYC applications (shares the ['kyc','pending'] key used inline in Users.jsx).
+export function usePendingKyc() {
+  return useQuery({
+    queryKey: ['kyc', 'pending'],
+    queryFn: async () => {
+      const data = await api.kyc.pending();
+      return data?.applications || data?.data || (Array.isArray(data) ? data : []);
+    },
+    refetchInterval: 60000,
+  });
+}
+
 export function useAuditLog(page = 1, filters = {}) {
   return useQuery({
     queryKey: ['admin', 'audit-log', page, filters],
