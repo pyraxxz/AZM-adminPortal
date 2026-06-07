@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useUsers } from '@/lib/useAdminData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -15,8 +16,8 @@ function KYCPanel({ userId }) {
   const { data, isLoading } = useQuery({ queryKey: ['kyc', 'pending'], queryFn: () => api.kyc.pending() });
   const pending = data?.applications || data || [];
   const qc = useQueryClient();
-  const approve = useMutation({ mutationFn: (id) => api.kyc.approve(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['kyc'] }); toast.success('KYC approved'); } });
-  const reject = useMutation({ mutationFn: ({ id, reason }) => api.kyc.reject(id, reason), onSuccess: () => { qc.invalidateQueries({ queryKey: ['kyc'] }); toast.success('KYC rejected'); } });
+  const approve = useMutation({ mutationFn: (id) => api.kyc.approve(id), onSuccess: () => { qc.invalidateQueries({ queryKey: ['kyc'] }); toast.success('KYC approved'); }, onError: (e) => toast.error(e.message || 'Failed to approve KYC') });
+  const reject = useMutation({ mutationFn: ({ id, reason }) => api.kyc.reject(id, reason), onSuccess: () => { qc.invalidateQueries({ queryKey: ['kyc'] }); toast.success('KYC rejected'); }, onError: (e) => toast.error(e.message || 'Failed to reject KYC') });
 
   return (
     <div className="space-y-3">
@@ -45,7 +46,12 @@ function KYCPanel({ userId }) {
 export default function Users() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('users');
+  // Honor ?tab= so notification deep-links (e.g. /users?tab=kyc, ?tab=vendors)
+  // land on the right tab. Falls back to 'users' for any unknown value.
+  const [searchParams] = useSearchParams();
+  const VALID_TABS = ['users', 'kyc', 'vendors', 'trade-accounts'];
+  const initialTab = VALID_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'users';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const { data = {}, isLoading } = useUsers(page, search);
   const { users = [], total = 0 } = data;
   const qc = useQueryClient();
@@ -53,14 +59,17 @@ export default function Users() {
   const banUser = useMutation({
     mutationFn: ({ id, duration }) => api.users.ban(id, duration),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'users'] }); toast.success('User banned'); },
+    onError: (e) => toast.error(e.message || 'Failed to ban user'),
   });
   const changeRole = useMutation({
     mutationFn: ({ id, role }) => api.users.changeRole(id, role),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'users'] }); toast.success('Role updated'); },
+    onError: (e) => toast.error(e.message || 'Failed to update role'),
   });
   const setRisk = useMutation({
     mutationFn: ({ id, tier }) => api.users.setRiskTier(id, tier),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'users'] }); toast.success('Risk tier updated'); },
+    onError: (e) => toast.error(e.message || 'Failed to update risk tier'),
   });
   const creditUser = useMutation({
     mutationFn: ({ id, amount }) => api.users.credit(id, amount),
@@ -162,6 +171,7 @@ function VendorPanel() {
   const review = useMutation({
     mutationFn: ({ id, action, reason }) => api.vendors.review(id, action, reason),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['vendor'] }); toast.success('Application reviewed'); },
+    onError: (e) => toast.error(e.message || 'Failed to review application'),
   });
 
   return (
@@ -196,10 +206,12 @@ function TradeAccountsPanel() {
   const approve = useMutation({
     mutationFn: (id) => api.tradeAccounts.approve(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'trade-accounts'] }); toast.success('Trade account approved — vendor notified'); },
+    onError: (e) => toast.error(e.message || 'Failed to approve trade account'),
   });
   const reject = useMutation({
     mutationFn: ({ id, reason }) => api.tradeAccounts.reject(id, reason),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'trade-accounts'] }); toast.success('Trade account rejected — vendor notified'); },
+    onError: (e) => toast.error(e.message || 'Failed to reject trade account'),
   });
 
   return (

@@ -1,0 +1,106 @@
+// src/components/admin/NotificationCenter.jsx
+// =============================================================================
+// Bell slide-over for the admin topbar. Shows the live notification feed with
+// Open / Resolved / All tabs, an unread badge, "mark all read", and rows that
+// expand for detail and route to the relevant page.
+//
+// Controlled by Layout.jsx (open state + the bell trigger). The aggregator hook
+// is the single source of truth; this is pure presentation + navigation.
+// =============================================================================
+
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { CheckCheck, Inbox } from 'lucide-react';
+import NotificationItem from './NotificationItem';
+
+const TABS = [
+  { key: 'open', label: 'Open' },
+  { key: 'resolved', label: 'Resolved' },
+  { key: 'all', label: 'All' },
+];
+
+export default function NotificationCenter({ open, onOpenChange, notifications }) {
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('open');
+  const { open: openItems, resolved, all, unreadCount, markRead, markAllRead, isLoading } = notifications;
+
+  const list = tab === 'open' ? openItems : tab === 'resolved' ? resolved : all;
+
+  const go = (route) => {
+    onOpenChange(false);
+    navigate(route);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="bg-slate-950 border-slate-800 text-slate-100 w-full sm:max-w-md p-0 flex flex-col"
+      >
+        <SheetHeader className="p-4 border-b border-slate-800">
+          <div className="flex items-center justify-between">
+            <SheetTitle className="text-white flex items-center gap-2">
+              Notifications
+              {unreadCount > 0 && (
+                <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                  {unreadCount} new
+                </span>
+              )}
+            </SheetTitle>
+            <button
+              onClick={markAllRead}
+              disabled={unreadCount === 0}
+              aria-label="Mark all notifications as read"
+              className="text-xs text-slate-400 hover:text-emerald-400 disabled:opacity-40 disabled:hover:text-slate-400 inline-flex items-center gap-1.5"
+            >
+              <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1.5 mt-3">
+            {TABS.map((t) => {
+              const count = t.key === 'open' ? openItems.length : t.key === 'resolved' ? resolved.length : all.length;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                    tab === t.key
+                      ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                      : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                  }`}
+                >
+                  {t.label} <span className="opacity-60">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </SheetHeader>
+
+        <ScrollArea className="flex-1">
+          <div className="p-3 space-y-2">
+            {isLoading && list.length === 0 && (
+              <p className="text-slate-500 text-sm text-center py-8">Loading…</p>
+            )}
+            {list.map((n) => (
+              <NotificationItem key={n.id} n={n} onNavigate={go} onRead={markRead} />
+            ))}
+            {!isLoading && list.length === 0 && (
+              <div className="text-center py-12 text-slate-500">
+                <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
+                  {tab === 'open' ? 'No open items — all clear' : tab === 'resolved' ? 'No resolved items' : 'Nothing here'}
+                </p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+}

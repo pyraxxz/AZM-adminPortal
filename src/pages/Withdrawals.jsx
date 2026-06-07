@@ -18,10 +18,12 @@ export default function Withdrawals() {
   const approve = useMutation({
     mutationFn: (id) => api.withdrawals.approve(id),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }); toast.success('Withdrawal approved'); },
+    onError: (e) => toast.error(e.message || 'Failed to approve withdrawal'),
   });
   const reject = useMutation({
     mutationFn: ({ id, reason }) => api.withdrawals.reject(id, reason),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin', 'withdrawals'] }); toast.success('Withdrawal rejected'); },
+    onError: (e) => toast.error(e.message || 'Failed to reject withdrawal'),
   });
 
   return (

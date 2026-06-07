@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStats } from '@/lib/useAdminData';
+import { useAdminNotifications } from '@/lib/useAdminNotifications';
+import AlertBanner from './AlertBanner';
+import NotificationCenter from './NotificationCenter';
 
 const NAV = [
   { label: 'Command Center', icon: LayoutDashboard, to: '/' },
@@ -15,6 +18,7 @@ const NAV = [
   { label: 'Susu Groups',     icon: PiggyBank,       to: '/susu' },
   { label: 'Susu Incidents',  icon: Siren,           to: '/susu-incidents' },
   { label: 'Residency Queue', icon: Home,            to: '/residency-queue' },
+  { label: 'Notifications',   icon: Bell,            to: '/notifications' },
   { label: 'Revenue',         icon: TrendingUp,      to: '/profits' },
   { label: 'Pool Monitor',    icon: Database,        to: '/pools' },
   { label: 'Users & KYC',     icon: Users,           to: '/users',          badge: 'kyc' },
@@ -40,7 +44,11 @@ function relativeTime(ts) {
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const location = useLocation();
+
+  // Live notification feed — drives the bell badge + the slide-over panel.
+  const notifications = useAdminNotifications();
 
   // Phase ADMIN-CONTROL-2: live GHS/USD rate from stats
   const { data: stats = {} } = useStats();
@@ -122,6 +130,9 @@ export default function AdminLayout() {
       {/* ── Main area ───────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
+        {/* A-02: real-time critical-event alerts, above all content */}
+        <AlertBanner />
+
         {/* Topbar */}
         <header
           className="h-16 border-b border-[#1e1e2e] flex items-center justify-between px-6 flex-shrink-0"
@@ -155,10 +166,19 @@ export default function AdminLayout() {
               )}
             </div>
 
-            {/* Bell */}
-            <button className="relative p-2 rounded-xl hover:bg-[#13131e] transition-colors">
+            {/* Bell — opens the notification center; badge = unread open items */}
+            <button
+              onClick={() => setNotifOpen(true)}
+              className="relative p-2 rounded-xl hover:bg-[#13131e] transition-colors"
+              title="Notifications"
+              aria-label={notifications.unreadCount > 0 ? `Notifications, ${notifications.unreadCount} unread` : 'Notifications'}
+            >
               <Bell className="w-4 h-4 text-[#4a4a6a]" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#f43f5e] rounded-full" />
+              {notifications.unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold bg-[#f43f5e] text-white rounded-full">
+                  {notifications.unreadCount > 99 ? '99+' : notifications.unreadCount}
+                </span>
+              )}
             </button>
 
             {/* User pill */}
@@ -185,6 +205,13 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Notification center slide-over (driven by the topbar bell) */}
+      <NotificationCenter
+        open={notifOpen}
+        onOpenChange={setNotifOpen}
+        notifications={notifications}
+      />
     </div>
   );
 }
