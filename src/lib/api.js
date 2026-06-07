@@ -16,6 +16,19 @@ async function request(path, options = {}) {
     },
     ...options,
   });
+
+  // Access tokens are short-lived (15m). When one expires mid-session, every
+  // call 401s. Rather than let the UI fill with errors / empty lists, clear the
+  // dead token and bounce to login — once, and never from the login page or the
+  // login call itself (which would loop).
+  if (res.status === 401 && !path.includes('/auth/login')) {
+    localStorage.removeItem('admin_token');
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.assign('/login');
+    }
+    throw new Error('Session expired. Please log in again.');
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(err.message || 'Request failed');
