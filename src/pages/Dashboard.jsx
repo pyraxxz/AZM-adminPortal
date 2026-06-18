@@ -4,7 +4,8 @@ import PoolBar from '@/components/admin/PoolBar';
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp, Users, Activity, AlertTriangle, Wallet,
-  ShieldCheck, Clock, Server, Cpu, Radio
+  ShieldCheck, Clock, Server, Cpu, Radio,
+  Lock, ShieldAlert, Building2
 } from 'lucide-react';
 
 function fmt(n, prefix = '') {
@@ -137,6 +138,16 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Escrow & Business System */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wide">Escrow & Business</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard label="Active Escrows" value={stats.activeEscrows || 0} icon={Lock} color="blue" />
+          <StatCard label="Disputed Escrows" value={stats.disputedEscrows || 0} icon={ShieldAlert} color="red" onClick={() => navigate('/escrow-disputes')} />
+          <StatCard label="Pending Business KYB" value={stats.pendingBusinessKyb || 0} icon={Building2} color="amber" onClick={() => navigate('/business-kyb')} />
         </div>
       </div>
     </div>

@@ -19,6 +19,9 @@ import SusuGroups from '@/pages/SusuGroups';
 import SusuIncidents from '@/pages/SusuIncidents';
 import ResidencyQueue from '@/pages/ResidencyQueue';
 import Notifications from '@/pages/Notifications';
+import BusinessKYB from '@/pages/BusinessKYB';
+import EscrowDisputes from '@/pages/EscrowDisputes';
+import Businesses from '@/pages/Businesses';
 import Login from '@/pages/Login';
 
 const AuthenticatedApp = () => {
@@ -53,9 +56,12 @@ const AuthenticatedApp = () => {
         <Route path="/fee-engine" element={<FeeEngine />} />
         <Route path="/fee-profiles" element={<FeeProfiles />} />
         <Route path="/war-room" element={<WarRoom />} />
+        <Route path="/escrow-disputes" element={<EscrowDisputes />} />
         <Route path="/susu" element={<SusuGroups />} />
         <Route path="/susu-incidents" element={<SusuIncidents />} />
         <Route path="/residency-queue" element={<ResidencyQueue />} />
+        <Route path="/business-kyb" element={<BusinessKYB />} />
+        <Route path="/businesses" element={<Businesses />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/users" element={<Users />} />
         <Route path="/withdrawals" element={<Withdrawals />} />

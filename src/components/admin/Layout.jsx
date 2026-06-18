@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Swords, Users, TrendingUp, Wallet,
   Sliders, FileText, Shield, ChevronLeft, ChevronRight,
   Bell, Settings, LogOut, Database, Zap, Bot,
-  PiggyBank, Siren, Home, Activity,
+  PiggyBank, Siren, Home, Activity, Building2, Lock, FileCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStats } from '@/lib/useAdminData';
@@ -15,13 +15,16 @@ import NotificationCenter from './NotificationCenter';
 const NAV = [
   { label: 'Command Center', icon: LayoutDashboard, to: '/' },
   { label: 'War Room',        icon: Swords,          to: '/war-room',       badge: 'disputes' },
+  { label: 'Escrow Disputes', icon: Lock,            to: '/escrow-disputes', badge: 'escrow_disputes' },
   { label: 'Susu Groups',     icon: PiggyBank,       to: '/susu' },
   { label: 'Susu Incidents',  icon: Siren,           to: '/susu-incidents' },
   { label: 'Residency Queue', icon: Home,            to: '/residency-queue' },
+  { label: 'Business KYB',    icon: FileCheck,       to: '/business-kyb',   badge: 'biz_kyb' },
   { label: 'Notifications',   icon: Bell,            to: '/notifications' },
   { label: 'Revenue',         icon: TrendingUp,      to: '/profits' },
   { label: 'Pool Monitor',    icon: Database,        to: '/pools' },
   { label: 'Users & KYC',     icon: Users,           to: '/users',          badge: 'kyc' },
+  { label: 'Businesses',      icon: Building2,       to: '/businesses' },
   { label: 'Withdrawals',     icon: Wallet,          to: '/withdrawals',    badge: 'withdrawals' },
   { label: 'Fee Engine',      icon: Sliders,         to: '/fee-engine' },
   { label: 'Fee Profiles',    icon: Zap,             to: '/fee-profiles' },
@@ -52,6 +55,17 @@ export default function AdminLayout() {
 
   // Phase ADMIN-CONTROL-2: live GHS/USD rate from stats
   const { data: stats = {} } = useStats();
+
+  // NAV badge counts — each NAV item's `badge` key maps to a stats field. A
+  // count of 0 (or missing) hides the badge.
+  const badgeCounts = {
+    disputes:        stats.activeDisputes,
+    escrow_disputes: stats.disputedEscrows,
+    kyc:             stats.pendingKyc,
+    biz_kyb:         stats.pendingBusinessKyb,
+    withdrawals:     stats.pendingWithdrawals,
+  };
+
   const liveRate      = stats.ghsRate ?? stats.liveUsdToGhs ?? null;
   const lastRateSync  = stats.lastRateSync ?? stats.rateUpdatedAt ?? null;
   const rateDisplay   = liveRate !== null ? Number(liveRate).toFixed(2) : '…';
@@ -82,8 +96,9 @@ export default function AdminLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5">
-          {NAV.map(({ label, icon: Icon, to }) => {
+          {NAV.map(({ label, icon: Icon, to, badge }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+            const count = badge ? Number(badgeCounts[badge]) || 0 : 0;
             return (
               <Link
                 key={to}
@@ -97,7 +112,17 @@ export default function AdminLayout() {
                 )}
               >
                 <Icon className={cn('w-4 h-4 flex-shrink-0', active && 'text-[#00d97e]')} />
-                {!collapsed && <span>{label}</span>}
+                {!collapsed && <span className="flex-1">{label}</span>}
+                {/* Badge count — expanded sidebar */}
+                {!collapsed && count > 0 && (
+                  <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold bg-[#f43f5e] text-white rounded-full">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                )}
+                {/* Badge dot — collapsed sidebar */}
+                {collapsed && count > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#f43f5e] rounded-full" />
+                )}
                 {/* Left accent bar */}
                 {active && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#00d97e] rounded-r-full" />

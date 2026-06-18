@@ -202,6 +202,59 @@ export const auditLog = {
     request(`/api/admin/audit-log?page=${page}&${new URLSearchParams(filters)}`),
 };
 
+// ── Business KYB Review Queue (WS1) ───────────────────────────────────────────
+// Backend filters server-side by ?status= (one KybStatus at a time) and returns
+// { success, businesses, hasMore, nextCursor }. Each business carries
+// `verificationDocuments` + `user`. Document review body is { status, reviewNotes }.
+// approve/reject are keyed by the PUBLIC bizId (BIZ-XXXXXXXXX), not the uuid.
+export const businessKyb = {
+  queue: (status = 'PENDING') =>
+    request(`/api/admin/business-kyb?status=${status}`),
+  reviewDoc: (documentId, status, reviewNotes) =>
+    request(`/api/admin/business-kyb/${documentId}/review`, {
+      method: 'POST', body: JSON.stringify({ status, reviewNotes }),
+    }),
+  approve: (bizId) =>
+    request(`/api/admin/business-kyb/${bizId}/approve`, { method: 'POST' }),
+  reject: (bizId, reason) =>
+    request(`/api/admin/business-kyb/${bizId}/reject`, {
+      method: 'POST', body: JSON.stringify({ reason }),
+    }),
+};
+
+// ── Escrow Dispute Management (WS2) ───────────────────────────────────────────
+// Disputes are keyed by EscrowDispute.id. resolve body matches the backend:
+// { ruling, rulingNotes, payerPct, payeePct }. There is no server-side extreme-
+// ruling override for escrow (unlike P2P trades) — the confirmation is client-side.
+export const escrow = {
+  disputes: (status) =>
+    request(`/api/admin/escrow-disputes${status ? `?status=${status}` : ''}`),
+  resolve: (disputeId, ruling, rulingNotes, payerPct, payeePct) =>
+    request(`/api/admin/escrow-disputes/${disputeId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ ruling, rulingNotes, payerPct, payeePct }),
+    }),
+  assign: (disputeId, assignedToId) =>
+    request(`/api/admin/escrow-disputes/${disputeId}/assign`, {
+      method: 'POST', body: JSON.stringify({ assignedToId }),
+    }),
+};
+
+// ── Business Management (WS3) ─────────────────────────────────────────────────
+// Backend search param is `q`; suspend/unsuspend keyed by public bizId. Detail
+// uses the public profile lookup (no admin-only detail route exists).
+export const businesses = {
+  list: (page = 1, search = '', kybStatus = '') =>
+    request(`/api/admin/businesses?page=${page}&q=${encodeURIComponent(search)}${kybStatus ? `&kybStatus=${kybStatus}` : ''}`),
+  detail: (bizId) => request(`/api/business/${bizId}`),
+  suspend: (bizId, reason) =>
+    request(`/api/admin/businesses/${bizId}/suspend`, {
+      method: 'POST', body: JSON.stringify({ reason }),
+    }),
+  unsuspend: (bizId) =>
+    request(`/api/admin/businesses/${bizId}/unsuspend`, { method: 'POST' }),
+};
+
 // ── AI Operations ─────────────────────────────────────────────────────────────
 export const aiOps = {
   cfoInsights: () => request('/api/admin/ai/cfo-insights'),
@@ -217,4 +270,5 @@ export default {
   auth, admin, settings, feeProfiles, trades, users, kyc, withdrawals,
   payouts, vendors, tradeAccounts, warRoom, susuIncidents, susuAdmin,
   proofOfResidency, versionGate, auditLog, aiOps,
+  businessKyb, escrow, businesses,
 };

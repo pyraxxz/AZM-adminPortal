@@ -280,3 +280,29 @@ export function usePoRReject() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'por-queue'] }),
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESCROW DISPUTES + BUSINESS KYB — Admin Portal (WS1/WS2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useEscrowDisputes(status) {
+  return useQuery({
+    queryKey: ['escrow-disputes', status || 'all'],
+    queryFn: async () => {
+      const data = await api.escrow.disputes(status);
+      return data.disputes || [];
+    },
+    refetchInterval: 30_000,
+  });
+}
+
+export function useBusinessKybQueue(status = 'PENDING') {
+  return useQuery({
+    queryKey: ['biz-kyb', status],
+    queryFn: async () => {
+      const data = await api.businessKyb.queue(status);
+      return data.businesses || [];
+    },
+    staleTime: 60_000,
+  });
+}
