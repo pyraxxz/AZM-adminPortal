@@ -61,23 +61,30 @@ async function patchDestination({ url, label }) {
 }
 
 // ── QR canvas renderer ────────────────────────────────────────────────────────
-async function renderQR(canvas, url, { size = 400, transparent = false, margin = 2 } = {}) {
+// scheme: { dark, light } — light may be '#00000000' for transparent
+async function renderQR(canvas, url, { size = 400, margin = 2, dark = '#000000', light = '#ffffff' } = {}) {
   await QRCode.toCanvas(canvas, url, {
     width: size,
     margin,
-    color: {
-      dark: '#000000',
-      light: transparent ? '#00000000' : '#ffffff',
-    },
+    color: { dark, light },
     errorCorrectionLevel: 'H',
   });
 }
 
-async function renderQRDataUrl(url, px, transparent) {
+async function renderQRDataUrl(url, px, dark, light) {
   const offscreen = document.createElement('canvas');
-  await renderQR(offscreen, url, { size: px, transparent, margin: transparent ? 1 : 2 });
+  const margin = light === '#00000000' ? 1 : 2;
+  await renderQR(offscreen, url, { size: px, dark, light, margin });
   return offscreen.toDataURL('image/png');
 }
+
+// The 4 colour schemes
+const SCHEMES = [
+  { key: 'black-white',       label: 'Black',   sub: 'on white',       dark: '#000000', light: '#ffffff', previewBg: '#ffffff', previewDot: '#000000' },
+  { key: 'white-black',       label: 'White',   sub: 'on black',       dark: '#ffffff', light: '#000000', previewBg: '#000000', previewDot: '#ffffff' },
+  { key: 'black-transparent', label: 'Black',   sub: 'transparent bg', dark: '#000000', light: '#00000000', previewBg: null,     previewDot: '#000000' },
+  { key: 'white-transparent', label: 'White',   sub: 'transparent bg', dark: '#ffffff', light: '#00000000', previewBg: null,     previewDot: '#ffffff' },
+];
 
 // ── History helpers ───────────────────────────────────────────────────────────
 function loadHistory() {
@@ -102,7 +109,8 @@ export default function QrForge() {
 
   const [editUrl,   setEditUrl]   = useState('');
   const [editLabel, setEditLabel] = useState('');
-  const [transparent, setTransparent] = useState(false);
+  const [schemeKey, setSchemeKey] = useState('black-white');
+  const scheme = SCHEMES.find((s) => s.key === schemeKey) || SCHEMES[0];
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory]         = useState(loadHistory);
   const [saved, setSaved]             = useState(false);
@@ -122,13 +130,14 @@ export default function QrForge() {
     try {
       await renderQR(canvasRef.current, PERMANENT_QR_URL, {
         size: 360,
-        transparent,
-        margin: transparent ? 1 : 2,
+        dark: scheme.dark,
+        light: scheme.light,
+        margin: scheme.light === '#00000000' ? 1 : 2,
       });
     } catch (e) {
       console.error('QR render error', e);
     }
-  }, [transparent]);
+  }, [scheme]);
 
   useEffect(() => { drawPreview(); }, [drawPreview]);
 
@@ -150,9 +159,9 @@ export default function QrForge() {
     if (!sizeConfig) return;
     setDownloading(sizeKey);
     try {
-      const dataUrl = await renderQRDataUrl(PERMANENT_QR_URL, sizeConfig.px, transparent);
+      const dataUrl = await renderQRDataUrl(PERMANENT_QR_URL, sizeConfig.px, scheme.dark, scheme.light);
       const a = document.createElement('a');
-      a.download = `azaman_qr_${sizeKey}_${sizeConfig.px}px${transparent ? '_transparent' : ''}.png`;
+      a.download = `azaman_qr_${sizeKey}_${sizeConfig.px}px_${scheme.key}.png`;
       a.href = dataUrl;
       document.body.appendChild(a);
       a.click();
@@ -305,23 +314,38 @@ export default function QrForge() {
                 <Download className="w-4 h-4 text-emerald-400" />
                 <span className="text-sm font-semibold text-slate-200">Download Sizes</span>
               </div>
-              <button
-                onClick={() => setTransparent((v) => !v)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                  transparent
-                    ? 'bg-violet-500/15 border-violet-500/40 text-violet-300'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                {transparent ? 'Transparent BG ✓' : 'White BG'}
-              </button>
+              <div className="flex gap-1.5 flex-wrap">
+                {SCHEMES.map((s) => (
+                  <button
+                    key={s.key}
+                    onClick={() => setSchemeKey(s.key)}
+                    title={`${s.label} ${s.sub}`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all ${
+                      schemeKey === s.key
+                        ? 'border-yellow-500/60 bg-yellow-500/10 text-yellow-300'
+                        : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    {/* Mini swatch */}
+                    <span
+                      className="w-3.5 h-3.5 rounded-sm border border-slate-600 shrink-0 flex items-center justify-center"
+                      style={{ backgroundColor: s.previewBg || 'transparent', backgroundImage: s.previewBg ? 'none' : 'repeating-conic-gradient(#475569 0% 25%, #1e293b 0% 50%)', backgroundSize: '6px 6px' }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-[1px]" style={{ backgroundColor: s.previewDot }} />
+                    </span>
+                    <span>{s.label}</span>
+                    <span className="text-slate-500">{s.sub}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <p className="text-xs text-slate-500">
-              {transparent
-                ? 'Transparent — ideal for garments, merch, and dark surfaces.'
-                : 'White background — best for paper, flyers, and light surfaces.'}
+              {scheme.light === '#00000000'
+                ? `${scheme.label} QR on transparent background — ideal for garments, merch, and dark/coloured surfaces.`
+                : scheme.dark === '#ffffff'
+                  ? 'White QR on black — great for dark print runs, stickers on dark packaging.'
+                  : 'Black QR on white — best for paper, flyers, and light surfaces.'}
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -368,14 +392,14 @@ export default function QrForge() {
             </p>
             <div
               className="relative rounded-2xl flex items-center justify-center p-4"
-              style={transparent ? {
+              style={scheme.light === '#00000000' ? {
                 backgroundImage: 'repeating-conic-gradient(#334155 0% 25%, #1e293b 0% 50%)',
                 backgroundSize: '16px 16px',
-              } : { backgroundColor: '#ffffff' }}
+              } : { backgroundColor: scheme.light }}
             >
               <canvas ref={canvasRef} className="rounded-lg max-w-full block" />
             </div>
-            {transparent && (
+            {scheme.light === '#00000000' && (
               <p className="text-center text-xs text-slate-500 mt-2">Checkerboard = transparent pixels</p>
             )}
           </div>
