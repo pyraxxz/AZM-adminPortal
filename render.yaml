@@ -1,0 +1,21 @@
+# =============================================================================
+# Render Blueprint — azaman-admin-portal (static site)
+#
+# Build Command:  npm run build
+# Publish Dir:    dist
+# =============================================================================
+services:
+  - type: web
+    name: azaman-admin-portal
+    runtime: static
+    branch: main
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Backend API URL — no trailing slash
+      - key: VITE_API_URL
+        value: "https://azaman-backend-9d3u.onrender.com"

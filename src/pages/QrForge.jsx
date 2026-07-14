@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const PERMANENT_QR_URL = `${API_BASE}/api/qr/go`;
 
 const SIZES = [
@@ -46,9 +46,7 @@ async function fetchDestination() {
 
 async function patchDestination({ url, label }) {
   const token =
-    localStorage.getItem('azm_admin_token') ||
-    localStorage.getItem('token') ||
-    sessionStorage.getItem('azm_token') || '';
+    localStorage.getItem('admin_token') || '';
   const res = await fetch(`${API_BASE}/api/qr/destination`, {
     method: 'PATCH',
     headers: {
