@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://azaman-backend-9d3u.onrender.com';
 const PERMANENT_QR_URL = `${API_BASE}/api/qr/go`;
 
 const SIZES = [
