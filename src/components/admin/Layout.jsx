@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Swords, Users, TrendingUp, Wallet,
   Sliders, FileText, Shield, ChevronLeft, ChevronRight,
   Bell, Settings, LogOut, Database, Zap, Bot,
-  PiggyBank, Siren, Home, Activity, Building2, Lock, FileCheck,
+  PiggyBank, Siren, Home, Activity, Building2, Lock, FileCheck, QrCode,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStats } from '@/lib/useAdminData';
@@ -29,6 +29,7 @@ const NAV = [
   { label: 'Fee Engine',      icon: Sliders,         to: '/fee-engine' },
   { label: 'Fee Profiles',    icon: Zap,             to: '/fee-profiles' },
   { label: 'AI Operations',   icon: Bot,             to: '/ai-ops' },
+  { label: 'QR Forge',         icon: QrCode,          to: '/qr-forge' },
   { label: 'Audit Log',       icon: FileText,        to: '/audit-log' },
   { label: 'System Config',   icon: Settings,        to: '/config' },
 ];

@@ -15,6 +15,7 @@ import Withdrawals from '@/pages/Withdrawals';
 import AuditLog from '@/pages/AuditLog';
 import Config from '@/pages/Config';
 import AiOps from '@/pages/AiOps';
+import QrForge from '@/pages/QrForge';
 import SusuGroups from '@/pages/SusuGroups';
 import SusuIncidents from '@/pages/SusuIncidents';
 import ResidencyQueue from '@/pages/ResidencyQueue';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/audit-log" element={<AuditLog />} />
         <Route path="/config" element={<Config />} />
         <Route path="/ai-ops" element={<AiOps />} />
+        <Route path="/qr-forge" element={<QrForge />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
