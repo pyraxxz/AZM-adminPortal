@@ -5,6 +5,7 @@ import {
   Sliders, FileText, Shield, ChevronLeft, ChevronRight,
   Bell, Settings, LogOut, Database, Zap, Bot,
   PiggyBank, Siren, Home, Activity, Building2, Lock, FileCheck, QrCode,
+  Store,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStats } from '@/lib/useAdminData';
@@ -25,6 +26,7 @@ const NAV = [
   { label: 'Pool Monitor',    icon: Database,        to: '/pools' },
   { label: 'Users & KYC',     icon: Users,           to: '/users',          badge: 'kyc' },
   { label: 'Businesses',      icon: Building2,       to: '/businesses' },
+  { label: 'Storefronts',    icon: Store,           to: '/storefronts' },
   { label: 'Withdrawals',     icon: Wallet,          to: '/withdrawals',    badge: 'withdrawals' },
   { label: 'Fee Engine',      icon: Sliders,         to: '/fee-engine' },
   { label: 'Fee Profiles',    icon: Zap,             to: '/fee-profiles' },

@@ -23,6 +23,7 @@ import Notifications from '@/pages/Notifications';
 import BusinessKYB from '@/pages/BusinessKYB';
 import EscrowDisputes from '@/pages/EscrowDisputes';
 import Businesses from '@/pages/Businesses';
+import Storefronts from '@/pages/Storefronts';
 import Login from '@/pages/Login';
 
 const AuthenticatedApp = () => {
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         <Route path="/susu-incidents" element={<SusuIncidents />} />
         <Route path="/residency-queue" element={<ResidencyQueue />} />
         <Route path="/business-kyb" element={<BusinessKYB />} />
+        <Route path="/storefronts" element={<Storefronts />} />
         <Route path="/businesses" element={<Businesses />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/users" element={<Users />} />

@@ -272,3 +272,9 @@ export default {
   proofOfResidency, versionGate, auditLog, aiOps,
   businessKyb, escrow, businesses,
 };
+// ── Admin Storefronts ──────────────────────────────────────────────────────────
+export const storefronts = {
+  list: (page = 1, limit = 20) => request(`/api/admin/storefront?page=${page}&limit=${limit}`),
+  disable: (businessProfileId) => request(`/api/admin/storefront/${businessProfileId}/disable`, { method: 'PATCH' }),
+  enable: (businessProfileId) => request(`/api/admin/storefront/${businessProfileId}/enable`, { method: 'PATCH' }),
+};
